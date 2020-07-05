@@ -212,7 +212,7 @@ class Plugin(Operator):
         # we have received valid results so we can kill the timer
         if process_timer.is_alive():
             process_timer.cancel()
-            return self.response("success",stdout.decode(),onion)
+            return self.response("success",json.loads(stdout),onion)
 
         self.logger.info("[!!!] Process timed out for %s", onion)
 
