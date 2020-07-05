@@ -230,23 +230,21 @@ class Plugin(Operator):
                 results = self.run_onionscan(onion)
                 if results['status'] == 'success' and results['data']['webDetected'] == 'true':
                     content = self.run_sessions(onion)
-                    print(content)
-                    #sys.exit(0)
-                    #if content['status'] == 'success':
-                    #    blacklist_CONTENT = self.blacklist.search(content['data'])
-                    #    if blacklist_CONTENT:
-                    #        self.logger.info(f"[X] Blocked by blacklist content => matched keyword {blacklist_CONTENT.group()}")
-                    #    else:
-                    #        self.logger.debug("[*] CONTENT blacklist test: PASSED")
-                    #        screenshot = self.take_screenshot(self.format_directory(self.screenshots), onion)
-                    #        self.logger.info("Indexing!")
-                    #        doc = {
-                    #                'onionscan':json.loads(results['data']),
-                    #                'html':content['data'],
-                    #                'screenshots':screenshot['data'],
-                    #                'interestingKeywords':self.interestingKeywords.findall(content['data'])
-                    #                }
-                    #        return self.parseDoc(doc)
+                    if content['status'] == 'success':
+                        blacklist_CONTENT = self.blacklist.search(content['data'])
+                        if blacklist_CONTENT:
+                            self.logger.info(f"[X] Blocked by blacklist content => matched keyword {blacklist_CONTENT.group()}")
+                        else:
+                            self.logger.debug("[*] CONTENT blacklist test: PASSED")
+                            screenshot = self.take_screenshot(self.format_directory(self.screenshots), onion)
+                            self.logger.info("Indexing!")
+                            doc = {
+                                    'onionscan':json.loads(results['data']),
+                                    'html':content['data'],
+                                    'screenshots':screenshot['data'],
+                                    'interestingKeywords':self.interestingKeywords.findall(content['data'])
+                                    }
+                            return self.parseDoc(doc)
 
                 else:
                     self.logger.info(f"[x] hidden service {onion} is not active")
