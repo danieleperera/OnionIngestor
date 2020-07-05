@@ -1,0 +1,328 @@
+{{define "fields"}}
+        {{range .Fields}}<td><a href="/?search={{.}}">{{.}}</a></td>{{end}}<td><a href="/?search={{index .Fields 0}}" title="{{.Links}} Relationships Share an Identifier connection with this Identifier">{{.Links}}</a></td>
+{{end}}
+
+{{define "table"}}
+<br/>
+<div id="{{.Title}}" class="row">
+<div class="col-lg-12">
+<div class="panel panel-default">
+ <div class="panel-heading">{{.AltTitle}} linked to {{.SearchTerm}} ({{len .Rows}})</div>
+ 
+ 
+
+  
+{{ $length := len .RollupCounts }} {{ if ne $length 0 }}
+  <div class="panel-body text-center">
+  <canvas id="myChart{{.Title}}" style="max-width:300px;max-height:300px;margin:auto;" width="300px" height="300px"></canvas>
+  
+  <script>
+var ctx = document.getElementById("myChart{{.Title}}");
+var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+    
+     labels: [
+      {{ range $key, $value := .RollupCounts }}
+        "{{$key}}",
+     {{end}}
+     ],
+        datasets: [{
+            data: [
+             {{ range $key, $value := .RollupCounts }}
+             {{$value}},
+             {{end}}
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero:true
+                }
+            }]
+        },
+             title: {
+                text: "Breakdown of {{.Title}}s for {{.SearchTerm}}",
+                display:true
+            },
+            legend :{
+                display:false
+            },
+    }
+});
+</script>
+  
+  {{ range $key, $value := .RollupCounts }}
+  {{if ne $key ""}}
+  
+ <button class="btn btn-primary" style="margin: 5px;" type="button">
+  {{$key}} <span class="badge">{{$value}}</span>
+</button>
+{{end}}
+ {{end}}
+ </div>
+ {{end}}
+ 
+  <!-- Table -->
+  <table class="table table-bordered table-striped">
+  
+        <tr>
+        <th>Tag</th>
+        {{range .Heading}}
+             <th>{{.}}</th>   
+        {{end}}
+        <th>Other Links</th>
+        </tr>
+        
+        {{range .Rows}}
+                
+              <tr><td><span class="label label-default"><a href="/?search={{.Tag}}">{{.Tag}}</a></span></td>{{template "fields" .}}</tr>
+        {{end}}
+  </table>
+</div>
+</div>
+</div>
+<br/>
+{{end}}
+
+
+<!-- ############ SUMMARY ################# -->
+{{define "summary"}}
+
+
+
+
+  <table class="table table-bordered table-striped">
+
+ {{range .Fields}}
+      <tr><th><a href="#{{.Key}}">{{.AltTitle}}</th>
+      <td>
+                <div class="progress">
+                        <div class="progress-bar progress-bar-striped" style="width: {{.Total}}%">
+                        {{.Value}}
+                        </div>
+                        </div>
+                </div>
+        </td></tr>
+ {{end}}
+ </table>
+{{end}}
+
+<!-- ############ Main Page ################# -->
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="/images/favicon.ico">
+
+    <script src="/scripts/chart.bundle.js"></script>
+
+
+    <title>OnionScan Correlations Lab</title>
+
+    <link href="/style/bootstrap.css" rel="stylesheet">
+
+     <style>
+     @font-face {
+  font-family: 'Roboto Slab';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto Slab Regular'), local('RobotoSlab-Regular'), url(/fonts/RobotoSlab-Regular.woff) format('woff');
+}
+@font-face {
+  font-family: 'Roboto Slab';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Roboto Slab Bold'), local('RobotoSlab-Bold'), url(/fonts/RobotoSlab-Bold.woff) format('woff');
+}
+
+body{
+  font-family: 'Roboto Slab';
+}
+.label a {
+ color:#fff;
+}
+
+.btn {
+ margin-bottom:5px;
+}
+
+
+     </style>
+
+  </head>
+
+  <body role="document">
+
+
+   <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/"><img style="margin-top: -16px;" width="75px" height="75px" src="/images/logo.png"/></a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/"  style="color:#fff;">Summary</a></li>
+            <li><a href="/saved"  style="color:#fff;">Saved Searches</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+    <br/><br/>    <br/><br/>
+    <div class="container theme-showcase" role="main">
+        
+        <form action="/">
+     <div class="row">
+  <div class="col-lg-12">
+    <div class="input-group">
+      <input name="search" type="text" class="form-control" placeholder="{{.SearchTerm}}" value="{{.SearchTerm}}"/>
+      <span class="input-group-btn">
+        <input class="btn btn-default" type="submit" value="Search!">
+      </span>
+    </div><!-- /input-group -->
+  </div><!-- /.col-lg-6 -->
+  </form>
+</div>
+
+<br/>
+
+{{if ne .Error ""}}
+<div class="alert alert-danger" role="alert">{{.Error}}</div>
+{{end}}
+
+{{if ne .Success ""}}
+<div class="alert alert-success" role="alert">{{.Success}}</div>
+{{end}}
+
+
+{{if ne .SearchTerm ""}}
+        {{ $length := len .Tables }} {{ if ne $length 0 }}
+<div class="row">
+        <div class="col-lg-3 text-center">
+        
+                <h2>Options</h2>
+                <form action="/save" method="post">
+                        <input type="hidden" name="search" value="{{.SearchTerm}}"/>
+                        <input type="hidden" name="token" value="{{.Token}}"/>
+                        <span class="input-group-btn">
+                               <input class="btn btn-default" type="submit" value="Save Search">
+                        </span>
+                </form>
+                       
+                {{ $lentags := len .UserTags }}
+                {{if ne 0 $lentags}}
+                        <h2>Linked Tags</h2>
+                        {{ $search := .SearchTerm }} 
+                        {{ $token := .Token }} 
+                        {{ range .UserTags }}
+                         <form action="/delete-tag" method="post">
+                                 <input type="hidden" name="search" value="{{$search}}"/>
+                                 <input type="hidden" name="tag" value="{{.}}"/>
+                                 <input type="hidden" name="token" value="{{$token}}"/>
+                                 <div class="btn-group">
+                                        <button class="btn btn-default" type="button"><a href="/?search={{.}}">{{.}}</a></button>
+                                 {{if ne . $search}}
+                                        <button class="btn btn-default" type="submit"><img src="/images/remove.png" width="16px" height="16px" title="remove tag"/></button>
+                                  {{end}}
+                                  </div>
+                          </form>
+                        {{end}}
+                {{end}}
+
+
+               <h3>Tag Search Term</h3>
+                
+               <form action="/tag" method="post">
+                    <div class="input-group">
+                      <input type="text" name="tag"  class="form-control" placeholder="Enter Tag..."/>
+                      <input type="hidden" name="search"value="{{.SearchTerm}}"/>
+                      <input type="hidden" name="token" value="{{.Token}}"/>
+                      <span class="input-group-btn">
+                        <input class="btn btn-default" type="submit" value="Tag!">
+                      </span>
+                    </div>
+               </form>
+    
+       
+       
+         </div>
+        <div class="col-lg-9">   
+
+        
+                <div class="panel panel-default">
+                        <div class="panel-heading">Summary for {{.SearchTerm}} {{if ne "" .Summary.Title}}({{.Summary.Title}}){{end}}&nbsp;&nbsp;
+                 
+                         {{range .Tags}}
+                         <span class="label label-{{if eq . "mod_status"}}danger{{else}}primary{{end}}"><a href="/?search={{.}}">{{.}}</a></span>&nbsp;
+                         {{end}}
+                         
+                         </div>
+         
+                        {{template "summary" .Summary}}
+                 </div>
+        
+
+                        {{range .Tables}}
+                        {{template "table" .}}
+                        {{end}}
+        </div>
+</div>
+        {{else}}
+
+        <div class="alert alert-warning" role="alert">No Relationships Found for <strong>{{.SearchTerm}}</strong></div>
+        {{end}}
+{{else}}
+
+{{ $length := len .SearchResults }} 
+
+{{ if eq $length 0 }}
+
+<div class="jumbotron">
+  <h1>Welcome to your OnionScan Correlation Lab!</h1>
+  <p>You have <strong>{{.RelationshipNum}}</strong> correlations to hunt through!</p>
+</div>
+
+{{else}}
+
+        <h2>Saved Searches</h2>
+        
+        <ul>
+        
+        {{ if eq $length 1}}
+                <div class="alert alert-warning" role="alert">You don't have any saved searches yet!</div>
+        {{else}}
+                {{range .SearchResults}}
+                        {{if ne . "onionscan://dummy"}}
+                        <li><a href="/?search={{.}}">{{.}}</a></li>
+                        {{end}}
+                {{end}}
+        {{end}}
+        
+        </ul>
+
+{{end}}
+
+
+{{end}}
+
+
+
+
+    </body>
+</html>
+
+
+

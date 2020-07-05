@@ -1,0 +1,9 @@
+OnionScraper.egg-info
+screenshots
+dump.rdb    
+onionscandb
+config.ini
+*.log
+*.pyc
+__pycache__
+venv
