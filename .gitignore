@@ -1,10 +1,11 @@
+onion_master_list.*
 webui
 templates
-OnionScraper.egg-info
+OnionIngestor.egg-info
 screenshots
 dump.rdb    
 onionscandb
-config.ini
+config.yml
 *.log
 *.pyc
 __pycache__
