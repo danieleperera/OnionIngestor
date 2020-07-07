@@ -1,3 +1,4 @@
+import re
 import time
 import json
 import traceback
@@ -29,6 +30,9 @@ class Plugin(Operator):
         self.timeout = int(kwargs['timeout'])
         self.retries = int(kwargs['retries'])
 
+        interesting = kwargs['interestingKeywords'].split(',')
+        self.interesting = re.compile('|'.join([re.escape(word) for word in interesting]), re.IGNORECASE)
+        
         self.proxy = kwargs['socks5']
         self.torControl = kwargs['TorController']
         self.headers ={
@@ -74,7 +78,24 @@ class Plugin(Operator):
                         result = content.text
                         if result:
                             html = BeautifulSoup(result,features="lxml")
-                            index = {'HTML':result,'title':html.title.text,'language':detect(html.text),'date-crawled':dt.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')+ 'Z','status':'success'}
+                            if html:
+                                index = {
+                                        'HTML':result,
+                                        'title':html.title.text,
+                                        'language':detect(html.text),
+                                        'date-crawled':dt.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')+ 'Z',
+                                        'status':'success',
+                                        'interestingKeywords':list(set(self.interesting.findall(result)))
+                                        }
+                            else:
+                                index = {
+                                        'HTML':result,
+                                        'title': None,
+                                        'language': None,
+                                        'date-crawled':dt.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')+ 'Z',
+                                        'status':'success',
+                                        'interestingKeywords':list(set(self.interesting.findall(result)))
+                                        }
                             return self.response(index, onion, self.plugin_name)
                 except requests.exceptions.ConnectionError as connection_error:
                     self.logger.error(f'Failed connecting to http://{url}')
@@ -90,10 +111,8 @@ class Plugin(Operator):
                     self.logger.error('[x] Max retries exceeded')
                     return self.response({'status':"failure"}, onion, self.plugin_name)
 
-    def handle_onion(self, onion):
+    def handle_onion(self, db, onion):
         content = self.run_sessions(onion)
-        print(content)
         if content[self.plugin_name]['status'] == 'success':
-            if self._onion_is_allowed(content):
-                self.es.save(content)
-
+            if self._onion_is_allowed(db, content):
+                self.es.update(db['_id'], content)

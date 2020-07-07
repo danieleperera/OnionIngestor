@@ -73,23 +73,19 @@ class Ingestor:
             # Run the source to collect artifacts.
             self.logger.info(f"Running source '{source}'")
             try:
+                # get the generator of onions
                 onions = self.sources[source].run()
-                if onions:
-                    self.logger.info(f'Found hidden links')
-                else:
-                    self.logger.info('No links found')
             except Exception as e:
                 self.logger.error(e)
                 self.logger.error(traceback.print_exc())
                 continue
 
-            # Process artifacts with each operator.
+            # Process onions with each operator.
             for operator in self.operators:
                 self.logger.info(f"Processing found onions with operator '{operator}'")
                 try:
-                    doc = self.operators[operator].process(onions)
-                    # Save the source state.
-                    self.es.save(doc)
+                    self.operators[operator].process(onions)
+                    # Save the source onion with collected data
                 except Exception as e:
                     self.logger.error(e)
                     self.logger.error(traceback.print_exc())

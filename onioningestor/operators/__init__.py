@@ -1,7 +1,7 @@
 import re
 import sys
 import json
-
+from datetime import datetime as dt
 
 class Operator:
     """Base class for all Operator plugins.
@@ -51,16 +51,13 @@ class Operator:
         return: dict
         """
         try:
-            return {operator_name: json.loads(str(content)), 'hiddenService': onion}
-        except json.decoder.JSONDecodeError as e:
-            self.logger.info('JosnDecode Error')
             return {operator_name: content, 'hiddenService': onion}
         #except TypeError:
         #    return {operator_name: None, 'hiddenService': onion}
         except Exception as e:
             self.logger.error(e)
 
-    def handle_onion(self, url):
+    def handle_onion(self, db, url):
         """Override with the same signature.
 
         :param artifact: A single ``Artifact`` object.
@@ -69,18 +66,17 @@ class Operator:
         raise NotImplementedError()
 
 
-    def _onion_is_allowed(self, response, type='URL'):
+    def _onion_is_allowed(self, response, db, type='URL'):
         """Returns True if this is allowed by this plugin's filters."""
         # Must be in allowed_sources, if set.
         if type == 'URL':
-            print(response)
             blacklist = self.blacklist.findall(response['hiddenService'])
         elif type == 'HTML':
             response['simple-html'].pop('status')
             response['simple-html']['status'] = 'blocked'
             blacklist = self.blacklist.findall(response['simple-html']['HTML'])
         if blacklist:
-            self.es.save(response)
+            self.es.update(db['_id'], response)
             return False
         return True
 
@@ -88,8 +84,15 @@ class Operator:
     def process(self, onions):
         """Process all applicable onions."""
         for onion in onions:
+            # Add link to database 
+            db = self.es.save({
+                'hiddenService':onion.url,
+                'monitor':'false',
+                'dateAdded':dt.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')+ 'Z'})
             if self._onion_is_allowed(
                     self.response({'status':'blocked'},onion.url,'regex-blacklist'),
+                    db,
                     type='URL'):
-                self.handle_onion(onion.url)
+                # Get data for current link
+                self.handle_onion(db, onion.url)
 

@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-__author__ = 'Andrey Glauzer'
+__author__ = 'Daniele Perera'
 __license__ = "MIT"
-__version__ = "1.0.1"
-__maintainer__ = "Andrey Glauzer"
+__version__ = "1.0.0"
+__maintainer__ = "Daniele Perera"
 __status__ = "Development"
 
 import requests
@@ -28,4 +28,5 @@ class Plugin(Source):
             lines = fp.read().splitlines()
         for onion in lines:
             yield self.onion(url=onion,source='simple-file',type='domain')
+        os.remove(self.filename)
 

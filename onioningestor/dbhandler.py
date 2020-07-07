@@ -20,7 +20,8 @@ class DbHandlerElasticSearch:
                   "type": "keyword"
                 },      
                 "monitor": {
-                  "type": "boolean"
+                  "type": "boolean",
+                  "null_value": "false"
                 },
                 "simple-html": {
                   "type": "nested",
@@ -39,6 +40,9 @@ class DbHandlerElasticSearch:
                     },
                     "date-indexed": {
                       "type": "date"
+                    },
+                    "interestingKeywords":{
+                      "type": "keyword"
                     }
                   }
                 }
@@ -65,11 +69,22 @@ class DbHandlerElasticSearch:
         self.es.indices.refresh(self.index)
         status = self.es.count(index=self.index)
         if status['_shards']['successful'] == 1:
-            self.logger.info('Successful')
-            self.logger.info('Count:%d',status['count'])
+            self.logger.info('Successful Indexed Item on Elasticsearch')
+            self.logger.info('Current Items Count:%d',status['count'])
         else:
             self.logger.error(status)
 
-    def save(self, doc):
-        self.es.index(index=self.index,body=doc)
-        self.count()
+    def update(self, _id, data):
+        if _id and data:
+            self.es.update(
+                    index=self.index,
+                    id=_id,
+                    body={"doc":data})
+            self.count()
+
+    def save(self, data):
+        if data:
+            status = self.es.index(index=self.index,body=data)
+            self.count()
+            return status
+
