@@ -78,6 +78,10 @@ class Plugin(Operator):
                         result = content.text
                         if result:
                             html = BeautifulSoup(result,features="lxml")
+                            # testing hardcorded filepath
+                            with open("/home/tony/Projects/OnionScraper_v2/onion_master_list.txt", "w") as fp:
+                                for onion in re.findall('([a-z2-7]{16,56}\.onion)',result):
+                                    fp.write("%s\n" % onion)
                             if html:
                                 index = {
                                         'HTML':result,
@@ -114,5 +118,5 @@ class Plugin(Operator):
     def handle_onion(self, db, onion):
         content = self.run_sessions(onion)
         if content[self.plugin_name]['status'] == 'success':
-            if self._onion_is_allowed(db, content):
+            if self._onion_is_allowed(content, db, 'HTML'):
                 self.es.update(db['_id'], content)

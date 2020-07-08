@@ -7,6 +7,7 @@ __version__ = "1.0.0"
 __maintainer__ = "Daniele Perera"
 __status__ = "Development"
 
+import os
 import requests
 from pathlib import Path
 
@@ -23,10 +24,14 @@ class Plugin(Source):
 
 
     def run(self):
+        items = []
         filepath = Path(__file__).parents[2]/self.filename
         with open(filepath, 'r') as fp:
             lines = fp.read().splitlines()
-        for onion in lines:
-            yield self.onion(url=onion,source='simple-file',type='domain')
+        # just testing
         os.remove(self.filename)
+        for onion in lines:
+            items.append(self.onion(url=onion,source='simple-file',type='domain'))
+            #yield self.onion(url=onion,source='simple-file',type='domain')
+        return items
 

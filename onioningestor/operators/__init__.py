@@ -1,7 +1,10 @@
 import re
 import sys
 import json
+from itertools import islice
 from datetime import datetime as dt
+from concurrent.futures import ThreadPoolExecutor
+
 
 class Operator:
     """Base class for all Operator plugins.
@@ -72,18 +75,18 @@ class Operator:
         if type == 'URL':
             blacklist = self.blacklist.findall(response['hiddenService'])
         elif type == 'HTML':
-            response['simple-html'].pop('status')
-            response['simple-html']['status'] = 'blocked'
             blacklist = self.blacklist.findall(response['simple-html']['HTML'])
         if blacklist:
+            response['simple-html'].pop('status')
+            response['simple-html']['status'] = 'blocked'
+            response['blacklist'] = list(set(blacklist))
             self.es.update(db['_id'], response)
             return False
         return True
 
-
-    def process(self, onions):
-        """Process all applicable onions."""
+    def collect(self, onions):
         for onion in onions:
+            self.logger.info(f'thread function processing {onion}')
             # Add link to database 
             db = self.es.save({
                 'hiddenService':onion.url,
@@ -96,3 +99,18 @@ class Operator:
                 # Get data for current link
                 self.handle_onion(db, onion.url)
 
+    def iter_batches(self, data, batch_size):
+        data = iter(data)
+        while True:
+            batch = list(islice(data, batch_size))
+            if len(batch) == 0:
+                break
+            yield batch
+
+    def process(self, onions):
+        """Process all applicable onions."""
+        #print(onions)
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            collect_tasks = [executor.submit(self.collect, files_batch) for files_batch in self.iter_batches(onions, batch_size=10)]
+            for tasks in collect_tasks:
+                self.logger.info(tasks.result())
