@@ -42,6 +42,14 @@ when finished sleep until user defined time and restart the process from the beg
   <img src="docs/img/workflow.png">
 </p>
 
+## Kibana Dashboard 
+
+Dashboard kibana after 2 days of crawling
+
+<p align="center">
+  <img src="docs/img/dashboard_kibana.png">
+</p>
+
 ## Installation
 
 Install requirements
