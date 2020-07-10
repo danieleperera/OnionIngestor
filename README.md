@@ -45,7 +45,9 @@ when finished sleep until user defined time and restart the process from the beg
 ## Installation
 
 Install requirements
+```
     pip install -r requirements.txt
+```
 
 After the tor client and the installed libraries use the `--help` command to get details of its use.
 
@@ -54,7 +56,7 @@ python3 -m onionscraper --help
 
 OnionScraper
 
-A Python3 application for indexing and scraping hidden services ElasticSearch
+An extendable tool to Collect, Crawl and Monitor onion sites on tor network and index collected information on Elasticsearch
 
 Installation:
    This application assumes you have python3 and pip3 installed.
@@ -94,6 +96,20 @@ optional arguments:
 ```
 
 The yaml config file contains all the information for OnionIngestor to work
+
+## How-to-run
+
+`python -m onionscan -c config.yml`
+
+will run source modules to collect onion linkd from internet and run all operators to collect and crawl
+
+`python -m onionscan -c config.yml --monitor thisIsAnOnionSiteLink.onion thisIsAnOnionSiteLink.onion`
+
+monitor mode bypasses all type of blacklists
+
+`python -m onionscan -c config.yml --scan thisIsAnOnionSiteLink.onion`
+
+will run all operators without running any source modules
 
 ### Operator [Onionscan](https://github.com/s-rah/onionscan)
 	onionscan --mode analysis -verbose -webport 8081
