@@ -1,6 +1,7 @@
 
 from onionscraper.operators import Operator
 
+
 class Plugin(Operator):
     """Operator for output to flat CSV file."""
     def __init__(self, filename, base_score):

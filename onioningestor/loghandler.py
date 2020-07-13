@@ -2,6 +2,7 @@ import os
 import logging
 from pathlib import Path
 
+
 class LoggerHandler():
     def __init__(self, level):
         self.level = getattr(logging, level)
@@ -30,4 +31,3 @@ class LoggerHandler():
     def start_logging(self):
         self.logger.info('Starting OnionScraper')
         return self.logger
-

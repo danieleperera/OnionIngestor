@@ -3,10 +3,12 @@ webui
 templates
 OnionIngestor.egg-info
 screenshots
-dump.rdb    
+dump.rdb
 onionscandb
 config.yml
 *.log
 *.pyc
 __pycache__
 venv
+.vscode
+build

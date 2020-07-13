@@ -8,7 +8,7 @@ class DbHandlerElasticSearch:
         self.logger = logger
         self.logger.info('Creating Elasticsearch mapping')
         self.config = config
-        self.mapping = '''
+        self.mapping = """
         {
           "mappings": {
             "_doc": {
@@ -18,7 +18,7 @@ class DbHandlerElasticSearch:
                 },
                 "blacklist": {
                   "type": "keyword"
-                },      
+                },
                 "monitor": {
                   "type": "boolean",
                   "null_value": "false"
@@ -50,7 +50,7 @@ class DbHandlerElasticSearch:
             }
           }
         }
-        '''
+        """
         self.index = self.config['index']
         try:
             self.es = Elasticsearch([{
@@ -87,4 +87,3 @@ class DbHandlerElasticSearch:
             status = self.es.index(index=self.index,body=data)
             self.count()
             return status
-

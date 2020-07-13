@@ -24,6 +24,7 @@ from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
 from onionscraper.operators import Operator
 
+
 class Plugin(Operator):
     """OnionScraper main work logic.
 
@@ -49,8 +50,8 @@ class Plugin(Operator):
             'Accept-Language':'en-US,en;q=0.5',
             'DNT': '1', 'Connection':
             'keep-alive',
-            'Upgrade-Insecure-Requests': '1'}
-
+            'Upgrade-Insecure-Requests': '1'
+        }
 
         blacklist = kwargs['blacklist'].split(',')
         self.blacklist = re.compile('|'.join([re.escape(word) for word in blacklist]), re.IGNORECASE)
@@ -110,9 +111,10 @@ class Plugin(Operator):
         options = Options()
         options.headless = True
         driver = webdriver.Firefox(
-                executable_path='/home/tony/Projects/OnionScraper/geckodriver',
-                options=options,
-                firefox_profile=fp)
+            executable_path='/home/tony/Projects/OnionScraper/geckodriver',
+            options=options,
+            firefox_profile=fp
+        )
         url = 'http://' + onion
         driver.get(url)
         uid = str(uuid4()).split('-')[0]
@@ -131,8 +133,6 @@ class Plugin(Operator):
             self.logger.error('[x] Unable to take screenshot')
             return self.response("failure",None,onion)
 
-        
-    
     def get_tor_session(self):
         try:
             s = requests.session()
@@ -172,31 +172,31 @@ class Plugin(Operator):
         return
 
     def run_sessions(self, onion):
-            retry = 0
-            result = None
-            while True:
-                try:
-                    url = 'http://'+onion
-                    self.logger.info(url)
-                    content = self.session.get(url)
-                    if content.status_code == 200:
-                        result = content.json()
-                except JSONDecodeError as e:
-                    self.logger.debug(f'JSONDecodeError {e}')
-                    result = content.text
-                except Exception as e:
-                    self.logger.error(e)
-                    self.logger.debug(traceback.print_exc())
-                finally:
-                    if result:
-                        return self.response("success",result,onion)
-                    else:
-                        self.logger.info('[x] No results found retrying ...')
-                        retry += 1
-                        self.renew_connection()
-                if retry > self.retries:
-                    self.logger.error('[x] Max retries exceeded')
-                    return self.response("failure",None, onion)
+        retry = 0
+        result = None
+        while True:
+            try:
+                url = 'http://'+onion
+                self.logger.info(url)
+                content = self.session.get(url)
+                if content.status_code == 200:
+                    result = content.json()
+            except JSONDecodeError as e:
+                self.logger.debug(f'JSONDecodeError {e}')
+                result = content.text
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.debug(traceback.print_exc())
+            finally:
+                if result:
+                    return self.response("success",result,onion)
+                else:
+                    self.logger.info('[x] No results found retrying ...')
+                    retry += 1
+                    self.renew_connection()
+            if retry > self.retries:
+                self.logger.error('[x] Max retries exceeded')
+                return self.response("failure",None, onion)
 
     def run_onionscan(self, onion):
         self.logger.info("[*] Running onionscan on %s", onion)
@@ -259,6 +259,3 @@ class Plugin(Operator):
         finally:
             pass
             #sys.exit(0)
-
-        
-
