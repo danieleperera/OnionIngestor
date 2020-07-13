@@ -19,6 +19,7 @@ class Operator:
     method name with an underscore to denote a ``_private_method``. Do not
     override other existing methods from this class.
     """
+    
     def __init__(self, logger, elasticsearch, allowed_sources=None):
         """Override this constructor in child classes.
 
@@ -87,7 +88,7 @@ class Operator:
     def collect(self, onions):
         for onion in onions:
             self.logger.info(f'thread function processing {onion}')
-            # Add link to database 
+            # Add link to database
             db = self.es.save({
                 'hiddenService':onion.url,
                 'monitor':'false',
