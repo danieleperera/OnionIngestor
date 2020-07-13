@@ -7,7 +7,7 @@ general:
     sleep: 10
     onion_validation: ([a-z2-7]{16,56}\.onion)
     blacklist: pedo,xxx,infant,loli,porn,child,abuse,sex,drug,cocaine,dope,zoo,daddy,daughter,boy,girl,young,muder,cocks,year,old
-    interestingKeywords: t.me,feed,rss,xml,atom,dataleak,breach,blog,ransomware,source code,data breach
+    interestingKeywords: t.me,rss,xml,atom,dataleak,breach,blog,ransomware,source code,data breach,bank,logs,hack
     elasticsearch:
             index: darkweb
             port : 9200
