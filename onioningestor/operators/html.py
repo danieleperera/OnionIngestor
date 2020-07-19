@@ -4,6 +4,7 @@ import json
 import traceback
 from datetime import datetime as dt
 from json.decoder import JSONDecodeError
+from collections import Counter
 
 import requests
 
@@ -22,10 +23,10 @@ class Plugin(Operator):
     This plugin collects HTML code from onion link
     """
 
-    def __init__(self, logger, elasticsearch, allowed_sources, **kwargs):
-        super(Plugin, self).__init__(logger, elasticsearch, allowed_sources)
-        self.plugin_name = "simple-html"
-        self.logger.info(f"Initializing {self.plugin_name}")
+    def __init__(self, logger, **kwargs):
+        super(Plugin, self).__init__(logger)
+        self.name = kwargs['name']
+        self.logger.info(f"Initializing {self.name}")
 
         self.timeout = int(kwargs["timeout"])
         self.retries = int(kwargs["retries"])
@@ -83,42 +84,24 @@ class Plugin(Operator):
                     result = content.text
                     if result:
                         html = BeautifulSoup(result, features="lxml")
-                        # testing hardcorded filepath
-                        with open(
-                            "/home/tony/Projects/OnionScraper_v2/onion_master_list.txt",
-                            "w",
-                        ) as fp:
-                            for onion in re.findall("([a-z2-7]{16,56}\.onion)", result):
-                                fp.write("%s\n" % onion)
                         if html:
                             index = {
                                 "HTML": result,
                                 "title": html.title.text,
                                 "language": detect(html.text),
-                                "date-crawled": dt.utcnow().strftime(
-                                    "%Y-%m-%dT%H:%M:%S.%f"
-                                )
-                                + "Z",
                                 "status": "success",
-                                "interestingKeywords": list(
-                                    set(self.interesting.findall(result))
-                                ),
+                                "interestingKeywords": Counter(self.interesting.findall(result)),
                             }
                         else:
                             index = {
                                 "HTML": result,
                                 "title": None,
                                 "language": None,
-                                "date-crawled": dt.utcnow().strftime(
-                                    "%Y-%m-%dT%H:%M:%S.%f"
-                                )
-                                + "Z",
                                 "status": "success",
-                                "interestingKeywords": list(
-                                    set(self.interesting.findall(result))
-                                ),
+                                "interestingKeywords": Counter(self.interesting.findall(result)),
                             }
-                        return self.response(index, onion, self.plugin_name)
+                        return self.response("success", index)
+
             except requests.exceptions.ConnectionError as connection_error:
                 self.logger.error(f"Failed connecting to http://{url}")
                 self.logger.debug(connection_error)
@@ -131,10 +114,10 @@ class Plugin(Operator):
             self.renew_connection()
             if retry > self.retries:
                 self.logger.error("[x] Max retries exceeded")
-                return self.response({"status": "failure"}, onion, self.plugin_name)
+                return self.response("failed", None)
 
-    def handle_onion(self, db, onion):
-        content = self.run_sessions(onion)
-        if content[self.plugin_name]["status"] == "success":
-            if self._onion_is_allowed(content, db, "HTML"):
-                self.es.update(db["_id"], content)
+    def handle_onion(self, onion):
+        html = self.run_sessions(onion.url)
+        if html['status'] == 'success':
+            self._onion_is_allowed(html['content']['HTML'], onion)
+        onion.simpleHTML(html)

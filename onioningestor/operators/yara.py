@@ -1,5 +1,5 @@
 
-from onionscraper.operators import Operator
+from onioningestor.operators import Operator
 
 
 class Plugin(Operator):

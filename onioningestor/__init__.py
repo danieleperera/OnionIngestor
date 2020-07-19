@@ -1,12 +1,15 @@
 import sys
 import time
+import queue
 import traceback
+import threading
 import collections
+from queue import Queue
 
 from . import config
-from . import dbhandler
 from . import loghandler
 
+from onioningestor.databases import StorageDispatcher, StorageThread, StorageSync
 
 class Ingestor:
     """ThreatIngestor main work logic.
@@ -18,37 +21,51 @@ class Ingestor:
         # Load logger
         log = loghandler.LoggerHandler(args.logLevel)
         self.logger = log.start_logging()
+        
         # Load config
         self.config = config.Config(args.configFile, self.logger)
         self.blacklist = self.config.blacklist()
 
-        # Load Elasticsearch.
+        # Create Queues
+        self.queue = self.config.monitorQueue()
+
+        # Get asynchronously o synchronously save
+        self.save_thread = self.config.save_thread()
+
+        # Track some statistics about artifacts in a summary object.
+        self.summary = collections.Counter()
+
+        # Threads
+        self.threads = []
         try:
-            self.es = dbhandler.DbHandlerElasticSearch(
-                    self.config.elasticsearch(),
-                    self.logger)
-        except Exception as e:
-            # Error loading elasticsearch.
-            self.logger.error(e)
-            self.logger.debug(traceback.print_exc())
-            sys.exit(1)
+            # Load Storage Engines - ElasticSearch, Telegram, Twitter etc
+            self.storage = StorageDispatcher(self.logger)
 
+            for name, db, kwargs in self.config.database_engines():
+                # start the threads handling database storage if needed
+                if self.save_thread:
+                    self.logger.debug(f"Starting daemon thread for {str(db)}")
+                    t = StorageThread(db(self.logger, **kwargs))
+                    self.threads.append(t)
+                    t.setDaemon(True)
+                    t.start()
+                # save onions synchronously
+                else:
+                    s = StorageSync(db(self.logger, **kwargs))
+                    self.storage.add_storage(s)
 
-        # Instantiate plugins.
-        try:
-            self.logger.info("Initializing sources")
-            self.sources = {name: source(self.logger, **kwargs)
-                            for name, source, kwargs in self.config.sources()}
+            if self.save_thread:
+                self.logger.info("Onions will be saved asynchronously")
+            else:
+                self.logger.info("Onions will be saved synchronously")
 
-            self.logger.info("initializing operators")
-            self.operators = {name: operator(self.logger, self.es, self.blacklist, **kwargs)
+            # Instantiate operator plugins.
+            self.logger.debug("initializing operators")
+            self.operators = {name: operator(self.logger, **kwargs)
                               for name, operator, kwargs in self.config.operators()}
 
-            self.logger.info("initializing notifiers")
-            #self.notifiers = {name: operator(**kwargs)
-            #                  for name, operator, kwargs in self.config.notifiers()}
         except Exception as e:
-            # Error loading elasticsearch.
+            # Error loading starting plugins.
             self.logger.error(e)
             self.logger.debug(traceback.print_exc())
             sys.exit(1)
@@ -56,51 +73,54 @@ class Ingestor:
 
     def run(self):
         """Run once, or forever, depending on config."""
-        if self.config.daemon():
-            self.logger.info("Running forever, in a loop")
-            self.run_forever()
-        else:
-            self.logger.info("Running once, to completion")
-            self.run_once()
+        self.run_once()
+        #if self.config.daemon():
+        #    self.logger.info("Running forever, in a loop")
+        #    self.run_forever()
+        #else:
+        #    self.logger.info("Running once, to completion")
+        #    self.run_once()
 
 
     def run_once(self):
         """Run each source once, passing artifacts to each operator."""
-        # Track some statistics about artifacts in a summary object.
-        summary = collections.Counter()
+        # Start collecting sources
+        self.collect_sources()
 
-        for source in self.sources:
-            # Run the source to collect artifacts.
-            self.logger.info(f"Running source '{source}'")
-            try:
-                # get the generator of onions
-                onions = self.sources[source].run()
-            except Exception as e:
-                self.logger.error(e)
-                self.logger.error(traceback.print_exc())
-                continue
-
-            # Process onions with each operator.
-            for operator in self.operators:
-                self.logger.info(f"Processing found onions with operator '{operator}'")
+        # Sources will fill various queues 
+        # MonitorQueue has priority high
+        # OnionQueue are those found in clearnet medium
+        # crawlQueue are those found crawling onionlinks low
+        onions = list(self.queue.queue)
+        done = False
+        if onions:
+            while not done:
                 try:
-                    self.operators[operator].process(onions)
-                    # Save the source onion with collected data
+                    ## Process onions with each operator.
+                    for operator in self.operators:
+                        self.logger.info(f"Processing found onions with operator '{operator}'")
+                        # Process list of onions
+                        self.operators[operator].process(onions)
+                        done = True
+                    ## Save Onions for each storage
+                    for onion in onions:
+                        self.storage.save_pastie(onion[1], 30)
                 except Exception as e:
                     self.logger.error(e)
                     self.logger.error(traceback.print_exc())
-                    continue
-
-
-
-#            # Record stats and update the summary.
-#            types = artifact_types(doc.get('interestingKeywords'))
-#            summary.update(types)
-#            for artifact_type in types:
-#                self.logger.info(f'types[artifact_type]')
-
-        # Log the summary.
-        self.logger.info(f"New artifacts: {dict(summary)}")
+                    break
+                except KeyboardInterrupt:
+                    print('')
+                    self.logger.info("Ctrl-c received! Sending kill to threads...")
+                    for t in self.threads:
+                        t.kill_received = True
+                    self.logger.info('Exiting')
+                    sys.exit(0)
+        else:
+            for t in self.threads:
+                t.kill_received = True
+            self.logger.info(f"Sleeping for {self.config.sleep()} seconds")
+            time.sleep(self.config.sleep())
 
 
     def run_forever(self):
@@ -108,20 +128,22 @@ class Ingestor:
         while True:
             self.run_once()
 
-            self.logger.info(f"Sleeping for {self.config.sleep()} seconds")
-            time.sleep(self.config.sleep())
 
-
-def artifact_types(artifact_list):
-    """Return a dictionary with counts of each artifact type."""
-    types = {}
-    for artifact in artifact_list:
-        artifact_type = artifact.__class__.__name__.lower()
-        if artifact_type in types:
-            types[artifact_type] += 1
-        else:
-            types[artifact_type] = 1
-
-    return types
-
+    def collect_sources(self):
+        self.logger.debug("Initializing sources")
+        for name, collect, kwargs in self.config.sources():
+            # Run the source to collect onion links from clear net.
+            self.logger.info(f"Running source '{name}'")
+            try:
+                # get the generator of onions
+                source = collect(self.logger, **kwargs)
+                source.set_onionQueue(self.queue) #priority 2
+                t = source.run()
+                self.threads.append(t)
+                #self.logger.info(f'Starting of thread: {t.currentThread().name}')
+                #t.start()
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.error(traceback.print_exc())
+                continue
 

@@ -1,4 +1,5 @@
 from collections import namedtuple
+from onioningestor.onion import Onion
 
 class Source(object):
     """Base class for all Source plugins.
@@ -7,14 +8,16 @@ class Source(object):
     additional methods to child classes, consider prefixing the method name
     with an underscore to denote a ``_private_method``.
     """
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Override this constructor in child classes.
         The first argument must always be ``name``.
         Other argumentss should be url, auth, etc, whatever is needed to set
         up the object.
         """
-        self.onion = namedtuple('onion', ['url','source','type'])
+        self.onion = Onion
 
+    def set_onionQueue(self, queue):
+        self.onionQueue = queue
 
     def run(self):
         """Run and return ``(saved_state, list(Artifact))``.
@@ -27,15 +30,4 @@ class Source(object):
         ``None``.
         """
         raise NotImplementedError()
-
-
-    def process_element(self, content, reference_link, include_nonobfuscated=False):
-        """Take a single source content/url and return a list of Artifacts.
-        This is the main work block of Source plugins, which handles
-        IOC extraction and artifact creation.
-        :param content: String content to extract from.
-        :param reference_link: Reference link to attach to all artifacts.
-        :param include_nonobfuscated: Include non-defanged URLs in output?
-        """
-        logger.debug(f"Processing in source '{self.name}'")
 

@@ -3,11 +3,14 @@ import traceback
 
 from elasticsearch import Elasticsearch, helpers
 
-class DbHandlerElasticSearch:
-    def __init__(self, config, logger):
+from onioningestor.databases import PastieStorage
+
+class Plugin(PastieStorage):
+    def __init__(self, logger, **kwargs):
+        self.name = kwargs.get('name')
         self.logger = logger
         self.logger.info('Creating Elasticsearch mapping')
-        self.config = config
+        self.config = kwargs
         self.mapping = """
         {
           "mappings": {
@@ -74,16 +77,7 @@ class DbHandlerElasticSearch:
         else:
             self.logger.error(status)
 
-    def update(self, _id, data):
-        if _id and data:
-            self.es.update(
-                    index=self.index,
-                    id=_id,
-                    body={"doc":data})
+    def __save_pastie__(self, onion):
+        if onion:
+            status = self.es.index(index=self.index,body=onion.asdict())
             self.count()
-
-    def save(self, data):
-        if data:
-            status = self.es.index(index=self.index,body=data)
-            self.count()
-            return status

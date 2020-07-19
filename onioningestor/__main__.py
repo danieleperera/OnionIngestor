@@ -38,7 +38,7 @@ from onioningestor import Ingestor
 
 # Load arguments from user
 parser = argparse.ArgumentParser(
-        prog='onionscraper',
+        prog='onioningestor',
         description=__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('-c', '--config',dest="configFile", required = True, help='Path to config file')
 parser.add_argument("--log", dest="logLevel",default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], help="Set the logging level, default is INFO")

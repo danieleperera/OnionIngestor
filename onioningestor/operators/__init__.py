@@ -1,9 +1,12 @@
 import re
 import sys
 import json
+from queue import Queue
 from itertools import islice
 from datetime import datetime as dt
 from concurrent.futures import ThreadPoolExecutor
+
+from collections import namedtuple
 
 
 class Operator:
@@ -20,7 +23,7 @@ class Operator:
     override other existing methods from this class.
     """
     
-    def __init__(self, logger, elasticsearch, allowed_sources=None):
+    def __init__(self, logger, allowed_sources=None):
         """Override this constructor in child classes.
 
         The arguments above (artifact_types, filter_string, allowed_sources)
@@ -44,24 +47,13 @@ class Operator:
         classes. Remember to do so *before* setting any default artifact_types.
         """
         self.logger = logger
-        self.blacklist = re.compile('|'.join([re.escape(word) for word in allowed_sources]), re.IGNORECASE)
-        self.es = elasticsearch
+        self.processQueue = Queue()
+        self.onions = {}
+        self.onion = namedtuple('onion',['url','source','type','index','monitor','denylist'])
+        deny = allowed_sources or []
+        self.blacklist = re.compile('|'.join([re.escape(word) for word in deny]), re.IGNORECASE)
 
-    def response(self, content, onion, operator_name):
-        """
-        status: success/failure
-        content: dict
-        onion: str
-        return: dict
-        """
-        try:
-            return {operator_name: content, 'hiddenService': onion}
-        #except TypeError:
-        #    return {operator_name: None, 'hiddenService': onion}
-        except Exception as e:
-            self.logger.error(e)
-
-    def handle_onion(self, db, url):
+    def handle_onion(self, url):
         """Override with the same signature.
 
         :param artifact: A single ``Artifact`` object.
@@ -69,36 +61,32 @@ class Operator:
         """
         raise NotImplementedError()
 
+    def response(self, status, content):
+        """
+        status: success/failure
+        content: dict
+        onion: str
+        return: dict
+        """
+        try:
+            return {'status':status, 'content': content}
+        except Exception as e:
+            self.logger.error(e)
 
-    def _onion_is_allowed(self, response, db, type='URL'):
+    def _onion_is_allowed(self, content, onion):
         """Returns True if this is allowed by this plugin's filters."""
-        # Must be in allowed_sources, if set.
-        if type == 'URL':
-            blacklist = self.blacklist.findall(response['hiddenService'])
-        elif type == 'HTML':
-            blacklist = self.blacklist.findall(response['simple-html']['HTML'])
+        blacklist = self.blacklist.findall(content)
         if blacklist:
-            response['simple-html'].pop('status')
-            response['simple-html']['status'] = 'blocked'
-            response['blacklist'] = list(set(blacklist))
-            self.es.update(db['_id'], response)
-            return False
-        return True
+            onion.denylist = blacklist
 
     def collect(self, onions):
         for onion in onions:
             self.logger.info(f'thread function processing {onion}')
-            # Add link to database
-            db = self.es.save({
-                'hiddenService':onion.url,
-                'monitor':'false',
-                'dateAdded':dt.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')+ 'Z'})
-            if self._onion_is_allowed(
-                    self.response({'status':'blocked'},onion.url,'regex-blacklist'),
-                    db,
-                    type='URL'):
-                # Get data for current link
-                self.handle_onion(db, onion.url)
+            if onion.monitor:
+                self.handle_onion(onion)
+            else:
+                if self._onion_is_allowed(onion.url):
+                    self.handle_onion(onion)
 
     def iter_batches(self, data, batch_size):
         data = iter(data)
@@ -110,8 +98,11 @@ class Operator:
 
     def process(self, onions):
         """Process all applicable onions."""
-        #print(onions)
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            collect_tasks = [executor.submit(self.collect, files_batch) for files_batch in self.iter_batches(onions, batch_size=10)]
-            for tasks in collect_tasks:
-                self.logger.info(tasks.result())
+        for onion in onions:
+            self.handle_onion(onion[1])
+        #self.save_pastie()
+        
+        #with ThreadPoolExecutor(max_workers=1) as executor:
+        #    collect_tasks = [executor.submit(self.collect, files_batch) for files_batch in self.iter_batches(onions, batch_size=10)]
+        #    for tasks in collect_tasks:
+        #        self.logger.info(tasks.result())

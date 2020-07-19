@@ -17,7 +17,7 @@ import time
 from bs4 import BeautifulSoup
 
 
-from onionscraper.sources import Source
+from onioningestor.sources import Source
 
 
 class Plugin(Source):

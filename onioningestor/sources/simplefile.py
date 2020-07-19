@@ -16,7 +16,7 @@ from onioningestor.sources import Source
 
 class Plugin(Source):
 
-    def __init__(self, logger, name, filename):
+    def __init__(self, logger, name, filename, **kwargs):
         self.logger = logger
         self.name = name
         self.filename = filename
@@ -28,10 +28,17 @@ class Plugin(Source):
         filepath = Path(__file__).parents[2]/self.filename
         with open(filepath, 'r') as fp:
             lines = fp.read().splitlines()
-        # just testing
-        os.remove(self.filename)
         for onion in lines:
-            items.append(self.onion(url=onion,source='simple-file',type='domain'))
-            #yield self.onion(url=onion,source='simple-file',type='domain')
-        return items
+            self.onionQueue.put(
+                    (
+                        2,
+                        self.onion(
+                            url=onion,
+                            source=self.name,
+                            type='domain',
+                            status='offline',
+                            monitor=False,
+                            denylist=False)
+                        )
+                    )
 
