@@ -23,8 +23,8 @@ class Plugin(Operator):
     This plugin collects HTML code from onion link
     """
 
-    def __init__(self, logger, **kwargs):
-        super(Plugin, self).__init__(logger)
+    def __init__(self, logger, denylist, **kwargs):
+        super(Plugin, self).__init__(logger, denylist)
         self.name = kwargs['name']
         self.logger.info(f"Initializing {self.name}")
 
@@ -90,7 +90,7 @@ class Plugin(Operator):
                                 "title": html.title.text,
                                 "language": detect(html.text),
                                 "status": "success",
-                                "interestingKeywords": Counter(self.interesting.findall(result)),
+                                "interestingKeywords": list(set(self.interesting.findall(result))),
                             }
                         else:
                             index = {
@@ -98,7 +98,7 @@ class Plugin(Operator):
                                 "title": None,
                                 "language": None,
                                 "status": "success",
-                                "interestingKeywords": Counter(self.interesting.findall(result)),
+                                "interestingKeywords": list(set(self.interesting.findall(result))),
                             }
                         return self.response("success", index)
 

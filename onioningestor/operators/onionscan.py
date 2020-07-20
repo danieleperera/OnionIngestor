@@ -17,7 +17,8 @@ class Plugin(Operator):
     Handles reading the config file, calling sources, maintaining state and
     sending artifacts to operators.
     """
-    def __init__(self, logger, **kwargs):
+    def __init__(self, logger, denylist, **kwargs):
+        super(Plugin, self).__init__(logger, denylist)
         self.name = kwargs['name']
         self.logger = logger
         self.logger.info(f'Initializing {self.name}')
@@ -27,16 +28,20 @@ class Plugin(Operator):
         self.torControl = "Zue5a29v4xE6FciWpPF93rR2M2T"
 
     def parseDoc(self, data):
-        data['onionscan'].pop('simpleReport', None)
-        crawls = data['onionscan'].pop('crawls', None)
-        hiddenService = data['onionscan'].pop('hiddenService', None)
-        data['onionscan']['crawls'] = [*crawls]
-        data['hiddenService'] = hiddenService
-        for onion in crawls.keys():
-            self.queueCrawl((
+        data.pop('simpleReport', None)
+        crawls = data.pop('crawls', None)
+        hiddenService = data.pop('hiddenService', None)
+        data['crawls'] = [*crawls]
+        crawl = set()
+        for onion in re.findall(r'\s?(\w+.onion)', str(crawls.keys())):
+            if onion != hiddenService:
+                crawl.add(onion)
+        for items in crawl:
+            print(f'crawling queue added: {item}')
+            self.queueCrawl.put((
                 3,
                 self.onion(
-                    url=onion,
+                    url=item,
                     source='crawled',
                     type='domain',
                     status='offline',
@@ -97,6 +102,7 @@ class Plugin(Operator):
                         self.parseDoc(stdout))
 
         self.logger.info("[!!!] Process timed out for %s", onion)
+        print(stdout)
         return self.response("failed",stdout)
 
     def handle_onion(self, onion):

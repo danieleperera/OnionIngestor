@@ -6,8 +6,7 @@ from itertools import islice
 from datetime import datetime as dt
 from concurrent.futures import ThreadPoolExecutor
 
-from collections import namedtuple
-
+from onioningestor.onion import Onion
 
 class Operator:
     """Base class for all Operator plugins.
@@ -47,12 +46,13 @@ class Operator:
         classes. Remember to do so *before* setting any default artifact_types.
         """
         self.logger = logger
-        self.processQueue = Queue()
-        self.onions = {}
-        self.onion = namedtuple('onion',['url','source','type','index','monitor','denylist'])
+        self.onion = Onion
         deny = allowed_sources or []
         self.blacklist = re.compile('|'.join([re.escape(word) for word in deny]), re.IGNORECASE)
 
+    def set_crawlQueue(self, queue):
+        self.queueCrawl = queue
+        
     def handle_onion(self, url):
         """Override with the same signature.
 
@@ -78,6 +78,7 @@ class Operator:
         blacklist = self.blacklist.findall(content)
         if blacklist:
             onion.denylist = blacklist
+            onion.status = 'blocked'
 
     def collect(self, onions):
         for onion in onions:

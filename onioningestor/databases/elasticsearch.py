@@ -61,7 +61,7 @@ class Plugin(PastieStorage):
                 'port':self.config['port']}])
             self.es.indices.create(
                     index=self.index,
-                    body=self.mapping,
+                    #body=self.mapping,
                     ignore=400)
         except Exception as e:
             self.logger.error(e)

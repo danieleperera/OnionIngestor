@@ -61,7 +61,7 @@ class Ingestor:
 
             # Instantiate operator plugins.
             self.logger.debug("initializing operators")
-            self.operators = {name: operator(self.logger, **kwargs)
+            self.operators = {name: operator(self.logger, self.blacklist, **kwargs)
                               for name, operator, kwargs in self.config.operators()}
 
         except Exception as e:
@@ -99,6 +99,8 @@ class Ingestor:
                     ## Process onions with each operator.
                     for operator in self.operators:
                         self.logger.info(f"Processing found onions with operator '{operator}'")
+                        # Set CrawlQueue for every operator
+                        self.operators[operator].set_crawlQueue(self.queue)
                         # Process list of onions
                         self.operators[operator].process(onions)
                         done = True
