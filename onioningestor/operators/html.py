@@ -23,8 +23,8 @@ class Plugin(Operator):
     This plugin collects HTML code from onion link
     """
 
-    def __init__(self, logger, denylist, **kwargs):
-        super(Plugin, self).__init__(logger, denylist)
+    def __init__(self, logger, denylist, config, **kwargs):
+        super(Plugin, self).__init__(logger, denylist, config)
         self.name = kwargs['name']
         self.logger.info(f"Initializing {self.name}")
 
@@ -37,7 +37,6 @@ class Plugin(Operator):
         )
 
         self.proxy = kwargs["socks5"]
-        self.torControl = kwargs["TorController"]
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -57,33 +56,21 @@ class Plugin(Operator):
             self.logger.debug(traceback.print_exc())
         return s
 
-    def renew_connection(self):
-        with Controller.from_port(port=self.torControl["port"]) as controller:
-            # Now we switch TOR identities to make sure we have a good connection
-            self.logger.info("Getting new Tor IP")
-            # authenticate to our local TOR controller
-            controller.authenticate(self.torControl["password"])
-            # send the signal for a new identity
-            controller.signal(Signal.NEWNYM)
-            # wait for the new identity to be initialized
-            time.sleep(controller.get_newnym_wait())
-            session = self.get_tor_session()
-            self.logger.info(
-                f"IP is {session.get('http://httpbin.org/ip').json()['origin']}"
-            )
 
     def run_sessions(self, onion):
         retry = 0
         result = None
         while True:
             try:
-                url = "http://" + onion
+                url = "http://" + onion.url
                 self.logger.info(url)
                 content = self.get_tor_session().get(url)
                 if content.status_code == 200:
                     result = content.text
                     if result:
                         html = BeautifulSoup(result, features="lxml")
+                        ## Find other onion links
+                        self.findCrawls(html, onion.url)
                         if html:
                             index = {
                                 "HTML": result,
@@ -100,7 +87,8 @@ class Plugin(Operator):
                                 "status": "success",
                                 "interestingKeywords": list(set(self.interesting.findall(result))),
                             }
-                        return self.response("success", index)
+                        onion.status = 'online'
+                        return self.response(self.name,"success", index)
 
             except requests.exceptions.ConnectionError as connection_error:
                 self.logger.error(f"Failed connecting to http://{url}")
@@ -114,10 +102,11 @@ class Plugin(Operator):
             self.renew_connection()
             if retry > self.retries:
                 self.logger.error("[x] Max retries exceeded")
-                return self.response("failed", None)
+                return self.response(self.name,"failed", None)
 
     def handle_onion(self, onion):
-        html = self.run_sessions(onion.url)
-        if html['status'] == 'success':
-            self._onion_is_allowed(html['content']['HTML'], onion)
-        onion.simpleHTML(html)
+        html = self.run_sessions(onion)
+        response = html[self.name]
+        if response['status'] == 'success':
+            self._onion_is_allowed(response['content']['HTML'], onion)
+        onion.set_operator(html)

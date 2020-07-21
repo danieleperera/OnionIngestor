@@ -1,5 +1,4 @@
 import json
-import time
 import traceback
 import subprocess
 from threading import Timer
@@ -7,6 +6,10 @@ from json.decoder import JSONDecodeError
 from concurrent.futures import ProcessPoolExecutor
 
 import requests
+
+from stem.control import Controller
+from stem import Signal
+
 
 from onioningestor.operators import Operator
 
@@ -17,50 +20,26 @@ class Plugin(Operator):
     Handles reading the config file, calling sources, maintaining state and
     sending artifacts to operators.
     """
-    def __init__(self, logger, denylist, **kwargs):
-        super(Plugin, self).__init__(logger, denylist)
+    def __init__(self, logger, denylist, config, **kwargs):
+        super(Plugin, self).__init__(logger, denylist, config)
         self.name = kwargs['name']
         self.logger = logger
         self.logger.info(f'Initializing {self.name}')
         self.onionscan = kwargs['binpath']
         self.timeout = int(kwargs.get('timeout', 300))
-        self.torControl = 9051
-        self.torControl = "Zue5a29v4xE6FciWpPF93rR2M2T"
 
     def parseDoc(self, data):
         data.pop('simpleReport', None)
         crawls = data.pop('crawls', None)
         hiddenService = data.pop('hiddenService', None)
         data['crawls'] = [*crawls]
-        crawl = set()
-        for onion in re.findall(r'\s?(\w+.onion)', str(crawls.keys())):
-            if onion != hiddenService:
-                crawl.add(onion)
-        for items in crawl:
-            print(f'crawling queue added: {item}')
-            self.queueCrawl.put((
-                3,
-                self.onion(
-                    url=item,
-                    source='crawled',
-                    type='domain',
-                    status='offline',
-                    monitor=False,
-                    denylist=False)))
+        try:
+            if data['linkedOnions']:
+                self.findCrawls(data['linkedOnions'], hiddenService)
+        except KeyError as e:
+            pass
         return data
 
-    # signal TOR for a new connection
-    def renew_connection(self):
-        with Controller.from_port(port = self.torControl['port']) as controller:
-            # Now we switch TOR identities to make sure we have a good connection
-            self.logger.info('Getting new Tor IP')
-            # authenticate to our local TOR controller
-            controller.authenticate(self.torControl['password'])
-            # send the signal for a new identity
-            controller.signal(Signal.NEWNYM)
-            # wait for the new identity to be initialized
-            time.sleep(controller.get_newnym_wait())
-            self.logger.info(f"IP is {requests.get('http://httpbin.org/ip').json()['origin']}")
 
     def handle_timeout(self, process, onion):
         #
@@ -74,7 +53,6 @@ class Plugin(Operator):
         except:
             pass
         self.renew_connection()
-        return
 
     def run_onionscan(self, onion):
         self.logger.info("[*] Running onionscan on %s", onion)
@@ -94,21 +72,23 @@ class Plugin(Operator):
             process_timer.cancel()
             try:
                 return self.response(
+                        self.name,
                         "success",
                         self.parseDoc(json.loads(stdout)))
             except json.decoder.JSONDecodeError:
                 return self.response(
+                        self.name,
                         "success",
                         self.parseDoc(stdout))
 
         self.logger.info("[!!!] Process timed out for %s", onion)
-        print(stdout)
-        return self.response("failed",stdout)
+        return self.response(self.name,"failed", None)
 
     def handle_onion(self, onion):
         try:
-            results = self.run_onionscan(onion.url)
-            onion.onionscan(results)
+            if onion.status != 'inactive':
+                results = self.run_onionscan(onion.url)
+                onion.set_operator(results)
         except Exception as e:
             self.logger.error(e)
             self.logger.error(traceback.print_exc())

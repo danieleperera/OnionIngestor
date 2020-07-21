@@ -56,6 +56,9 @@ class Config:
     def blacklist(self):
         return self.config["general"]["blacklist"].split(",")
 
+    def torController(self):
+        return self.config["general"]["TorController"]
+
     def monitorQueue(self):
         fp = self.config["monitor"].get("filename", False)
         q = PriorityQueue(maxsize=0)

@@ -10,14 +10,11 @@ class Onion(object):
         self.monitor = monitor
         self.denylist = denylist
         self.datetime = dt.now()
+        self.operators = {}
 
-    def simpleHTML(self, response):
-        self.simpleHTML = response
-        # if any match update denylist
+    def set_operator(self, response):
+        self.operators.update(response)
 
-    def onionscan(self, response):
-        self.onionscan = response
-    
     def asdict(self):
         d  = {
                 'hiddenService':self.url,
@@ -27,8 +24,7 @@ class Onion(object):
                 'monitor': self.monitor,
                 'denylist': self.denylist,
                 'dateFound': self.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")+"Z",
-                'simpleHTML': self.simpleHTML,
-                'onionscan':self.onionscan
+                'operators': self.operators,
                 }
         return d
 

@@ -14,10 +14,11 @@ class Plugin(PastieStorage):
 
     def __save_pastie__(self, pastie):
         message = '''
-HiddenSite:        {site}
+HiddenSite
+{site}
 Source    :        {url}
 Monitor   :        {content}
-Status    :        {status}        
+Status     :        {status}        
     '''.format(
             site=pastie.url,
             url=pastie.source,

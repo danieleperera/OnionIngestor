@@ -1,10 +1,14 @@
 import re
 import sys
 import json
+import time
+import requests
 from queue import Queue
-from itertools import islice
 from datetime import datetime as dt
 from concurrent.futures import ThreadPoolExecutor
+
+from stem.control import Controller
+from stem import Signal
 
 from onioningestor.onion import Onion
 
@@ -22,7 +26,7 @@ class Operator:
     override other existing methods from this class.
     """
     
-    def __init__(self, logger, allowed_sources=None):
+    def __init__(self, logger, config, allowed_sources=None):
         """Override this constructor in child classes.
 
         The arguments above (artifact_types, filter_string, allowed_sources)
@@ -47,12 +51,26 @@ class Operator:
         """
         self.logger = logger
         self.onion = Onion
+        self.torControl = config
         deny = allowed_sources or []
         self.blacklist = re.compile('|'.join([re.escape(word) for word in deny]), re.IGNORECASE)
 
+    # signal TOR for a new connection
+    def renew_connection(self):
+        with Controller.from_port(port = int(self.torControl['port'])) as controller:
+            # Now we switch TOR identities to make sure we have a good connection
+            self.logger.info('Getting new Tor IP')
+            # authenticate to our local TOR controller
+            controller.authenticate(self.torControl['password'])
+            # send the signal for a new identity
+            controller.signal(Signal.NEWNYM)
+            # wait for the new identity to be initialized
+            time.sleep(controller.get_newnym_wait())
+            self.logger.info(f"IP is {requests.get('http://httpbin.org/ip').json()['origin']}")
+
     def set_crawlQueue(self, queue):
         self.queueCrawl = queue
-        
+
     def handle_onion(self, url):
         """Override with the same signature.
 
@@ -61,7 +79,7 @@ class Operator:
         """
         raise NotImplementedError()
 
-    def response(self, status, content):
+    def response(self, operator, status, content):
         """
         status: success/failure
         content: dict
@@ -69,7 +87,7 @@ class Operator:
         return: dict
         """
         try:
-            return {'status':status, 'content': content}
+            return {operator:{'status':status, 'content': content}}
         except Exception as e:
             self.logger.error(e)
 
@@ -80,29 +98,33 @@ class Operator:
             onion.denylist = blacklist
             onion.status = 'blocked'
 
+    def findCrawls(self, content, hiddenService):
+        crawl = set()
+        for onion in re.findall(r'\s?(\w+.onion)', str(content)):
+            if onion != hiddenService:
+                crawl.add(onion)
+        for item in crawl:
+            print(f'crawling queue added: {item}')
+            self.queueCrawl.put((
+                3,
+                self.onion(
+                    url=item,
+                    source='crawled',
+                    type='domain',
+                    status='offline',
+                    monitor=False,
+                    denylist=False)))
+
     def collect(self, onions):
         for onion in onions:
-            self.logger.info(f'thread function processing {onion}')
-            if onion.monitor:
-                self.handle_onion(onion)
-            else:
-                if self._onion_is_allowed(onion.url):
-                    self.handle_onion(onion)
+            self.logger.info(f'thread function processing {onion[1]}')
+            self.handle_onion(onion[1])
 
-    def iter_batches(self, data, batch_size):
-        data = iter(data)
-        while True:
-            batch = list(islice(data, batch_size))
-            if len(batch) == 0:
-                break
-            yield batch
 
     def process(self, onions):
         """Process all applicable onions."""
         for onion in onions:
             self.handle_onion(onion[1])
-        #self.save_pastie()
-        
         #with ThreadPoolExecutor(max_workers=1) as executor:
         #    collect_tasks = [executor.submit(self.collect, files_batch) for files_batch in self.iter_batches(onions, batch_size=10)]
         #    for tasks in collect_tasks:

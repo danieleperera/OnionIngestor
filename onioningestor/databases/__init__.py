@@ -116,24 +116,8 @@ class PastieStorage():
             self.logger.debug('{0}: pastie[{1}] saved in {2}s'.format(self.name, pastie.url, delta))
         except Exception as e:
             self.logger.error('{0}: unable to save pastie[{1}]: {2}'.format(self.name, pastie.url, e))
-            raise
-
-    def __seen_pastie__(self, pastie_id, **kwargs):
-        raise NotImplementedError
-
-    def seen_pastie(self, pastie_id, **kwargs):
-        if not self.lookup:
-            return False
-        try:
-            start = time.time()
-            self.logger.debug('{0}: looking up pastie[{1}]'.format(self.name, pastie_id))
-            res = self.__seen_pastie__(pastie_id, **kwargs)
-            delta = time.time() - start
-            self.logger.debug('{0}: pastie[{1}] looked-up in {2}s'.format(self.name, pastie_id, delta))
-            return res
-        except Exception as e:
-            self.logger.error('{0}: unable to lookup pastie[{1}]: {2}'.format(self.name, pastie_id, e))
-            raise
+            pass
+            #raise
 
 class Notifier(object):
     def __init__(self, logger, **kwargs):
