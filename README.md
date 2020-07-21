@@ -11,7 +11,10 @@
     <img src="https://img.shields.io/badge/Open%20Source-%E2%9D%A4-brightgreen.svg">
    </a>
    <a href="https://t.me/blueteamzone">
-    <img src="https://img.shields.io/static/v1?label=Telegram Channel&message=Blueteamzone?style=plastic&logo=telegram">
+    <img src="https://img.shields.io/badge/Telegram%20Channel-BlueTeamZone-blue.svg?logo=telegram">
+   </a>
+   <a href="https://twitter.com/daniele_perera/">
+    <img src="https://img.shields.io/twitter/follow/daniele_perera?style=social">
    </a>
 </p>
 
