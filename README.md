@@ -7,9 +7,12 @@
   <a href="https://python.org/">
     <img src="https://img.shields.io/pypi/pyversions/3.svg">
   </a>
-    <a href="https://opensource.org">
+   <a href="https://opensource.org">
     <img src="https://img.shields.io/badge/Open%20Source-%E2%9D%A4-brightgreen.svg">
-  </a>
+   </a>
+   <a href="https://t.me/blueteamzone">
+    <img src="https://img.shields.io/static/v1?label=Telegram Channel&message=Blueteamzone?style=plastic&logo=telegram">
+   </a>
 </p>
 
 <p align="center">
