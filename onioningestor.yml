@@ -57,32 +57,26 @@ operators:
      module: html
      timeout: 300
      retries: 2
-     interestingKeywords: t.me,feed,rss,xml,atom,dataleak,breach,blog,ransomware,source code,data breach
+     interestingKeywords: YOUR,INTERESTING,KEYWORDS,GO,HERE
      socks5:
          http: 'socks5h://127.0.0.1:9050'
          https: 'socks5h://127.0.0.1:9050'
 
-   - name: onionscan-go
-     module: onionscan
-     binpath: /home/tony/go/src/github.com/s-rah/onionscan/test123
-                  #        - name: simple-screenshot
-                  #          module: screenshot
-                  #          screenshots_path: null
-                  #
-                  #        - name: onionscan-go
-                  #          module: onionscan
-                  #          binpath: /home/tony/go/bin/onionscan
-                  #
+#   - name: onionscan-go
+#     module: onionscan
+#     binpath: /PATH/TO/YOUR/ONIONSCAN/GO/BINARY
 
-    #  - name: yara-rule
-    #    module: yara
-    #    filename: categories.yar
-    #    base_score: 50
-    #
-    #  - name: regex-match
-    #    module: regex
-    #    keywords: test,test2
-    #    base_score: 20
+
+#   - name: simple-screenshot
+#   module: screenshot
+#   screenshots_path: null
+         
+
+#  - name: yara-rule
+#    module: yara
+#    filename: categories.yar
+#    base_score: 50
+
 
 database_Engines:
     # Simple telegram notifier
@@ -91,21 +85,21 @@ database_Engines:
     chat_id: YOUR-TELEGRAM-CHAT
     token: YOUR-TELEGRAM-TOKEN
 
-  - name: elasticsearch
-    module: elasticsearch
-    index: YOUR-ELASTICSEARCH-INDEX_NAME
-    port : 9200
-    host : 127.0.0.1
+#  - name: elasticsearch
+#    module: elasticsearch
+#    index: YOUR-ELASTICSEARCH-INDEX_NAME
+#    port : 9200
+#    host : 127.0.0.1
 
-    #  - name: email
-    #    module: send_email
-    #    alert: no             # Enable/disable email alerts
-    #    from: alert@example.com
-    #    to: alert@example.com
-    #    server: 127.0.0.1     # Address of the server (hostname or IP)
-    #    port: 25              # Outgoing SMTP port: 25, 587, ...
-    #    tls: no               # Enable/disable tls support
-    #    username: ''          # (optional) Username for authentication. Leave blank for no authentication.
-    #    password: ''          # (optional) Password for authentication. Leave blank for no authentication.
-    #    subject: '[onioningestor] - {subject}'
-    #    size-limit: 1048576   # Size limit for pastie, above it's sent as attachement
+#  - name: email
+#    module: send_email
+#    alert: no             # Enable/disable email alerts
+#    from: alert@example.com
+#    to: alert@example.com
+#    server: 127.0.0.1     # Address of the server (hostname or IP)
+#    port: 25              # Outgoing SMTP port: 25, 587, ...
+#    tls: no               # Enable/disable tls support
+#    username: ''          # (optional) Username for authentication. Leave blank for no authentication.
+#    password: ''          # (optional) Password for authentication. Leave blank for no authentication.
+#    subject: '[onioningestor] - {subject}'
+#    size-limit: 1048576   # Size limit for pastie, above it's sent as attachement
