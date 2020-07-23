@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/img/logo.png" width="100">
+  <img src="docs/img/logo.png" width="300">
 </p>
 
 <h1 align="center">OnionIngestor</h1>
