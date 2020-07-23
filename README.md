@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/img/logo.png" width="300">
+  <img src="docs/img/logo.png" width="500">
 </p>
 
 <h1 align="center">OnionIngestor</h1>
@@ -421,12 +421,13 @@ The output of the result is json, and in the same format it is sent to the chose
 
 Daniele Perera
 
-## Acknowledgments 
+### Credits
+* Rosy Battaglia for the amazing logo that she created for this project! Check her on [instagram](https://www.instagram.com/royxhe/) 
+* ThreatIngestor for backbone logic for sources, operators! Check [here](https://github.com/InQuest/ThreatIngestor)
+* VigilantOnion for some sources logic! Check [here](https://github.com/andreyglauzer/VigilantOnion)
+* onionscan the best tool that I have found to scan an onion link! Check [here](https://github.com/s-rah/onionscan)
+* Justin from automatingosint! Without his blog I woudn't have made it. Check [here](http://www.automatingosint.com/blog/2016/07/dark-web-osint-with-python-and-onionscan-part-one/)
 
-Special thanks to:
-andreyglauzer
-InQuest
-s-rah
 
 Their code was used to implement this project
 Feel free to fork or open an issue to collaborate with the project.
