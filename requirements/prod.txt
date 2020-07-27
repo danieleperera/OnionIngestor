@@ -13,5 +13,6 @@ schedule==0.6.0
 selenium==3.141.0
 six==1.15.0
 soupsieve==2.0.1
-stem==1.8.0
+stem==1.8.0i
 urllib3==1.25.9
+xlrd==1.2.0
