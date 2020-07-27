@@ -110,7 +110,7 @@ class Ingestor:
     def run_once(self):
         """Run each source once, passing artifacts to each operator."""
         # Start collecting sources
-        # self.collect_sources()
+        self.collect_sources()
         # Sources will fill various queues 
         # MonitorQueue has priority high
         # OnionQueue are those found in clearnet medium
