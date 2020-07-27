@@ -104,7 +104,7 @@ class Operator:
             if onion != hiddenService:
                 crawl.add(onion)
         for item in crawl:
-            print(f'crawling queue added: {item}')
+            self.logger.debug(f'crawling queue added: {item}')
             self.queueCrawl.put((
                 3,
                 self.onion(

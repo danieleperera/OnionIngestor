@@ -80,7 +80,7 @@ operators:
 
 database_Engines:
     # Simple telegram notifier
-  - name: telegram-notifer
+  - name: telegram-notifer                      # see https://core.telegram.org/bots/api#authorizing-your-bot
     module: telegram
     chat_id: YOUR-TELEGRAM-CHAT
     token: YOUR-TELEGRAM-TOKEN
