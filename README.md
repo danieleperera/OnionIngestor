@@ -421,6 +421,10 @@ The output of the result is json, and in the same format it is sent to the chose
 
 Daniele Perera
 
+# Disclaimer
+
+OnionIngestor is a platform which makes use of many other open source projects, many of which have their own licenses. OnionIngestor does not claim ownership of any projects that it uses, and does not represent any of said projects. To the best of the Author's knowledge, the use of these tools in the OnionIngestor is not violating any licenses. OnionIngestor is a free and open source project that does not make, nor seeks to make, any revenue from the use of the other open source tools in use. Developers assume no liability and are not responsible for any misuse or damage caused by this program. It's the end user's responsibility to obey all applicable local, state and federal laws while using OnionIngestor.
+
 ### Credits
 * Rosy Battaglia for the amazing logo that she created for this project! Check her on [instagram](https://www.instagram.com/royxhe/) 
 * ThreatIngestor for backbone logic for sources, operators! Check [here](https://github.com/InQuest/ThreatIngestor)
