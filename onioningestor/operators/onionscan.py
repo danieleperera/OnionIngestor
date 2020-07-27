@@ -34,8 +34,8 @@ class Plugin(Operator):
         hiddenService = data.pop('hiddenService', None)
         data['crawls'] = [*crawls]
         try:
-            if data['linkedOnions']:
-                self.findCrawls(data['linkedOnions'], hiddenService)
+            if data['identifierReport'].get('linkedOnions', False):
+                self.findCrawls(data['identifierReport']['linkedOnions'], hiddenService)
         except KeyError as e:
             pass
         return data

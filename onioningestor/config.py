@@ -60,9 +60,9 @@ class Config:
         return self.config["general"]["TorController"]
 
     def monitorQueue(self):
-        fp = self.config["monitor"].get("filename", False)
+        fp = Path(self.config["monitor"].get("filename", "this_File_Does_notExsit"))
         q = PriorityQueue(maxsize=0)
-        if fp:
+        if fp.is_file():
             with open(fp, 'r') as f:
                 monitorOnions = f.read().splitlines()
             for monitor in monitorOnions:
@@ -77,7 +77,7 @@ class Config:
                     denylist=False)))
             return q
         else:
-            return None
+            return q
 
     def logging(self):
         """Returns logging config dictionary."""

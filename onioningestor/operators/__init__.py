@@ -115,16 +115,9 @@ class Operator:
                     monitor=False,
                     denylist=False)))
 
-    def collect(self, onions):
-        for onion in onions:
-            self.logger.info(f'thread function processing {onion[1]}')
-            self.handle_onion(onion[1])
-
-
-    def process(self, onions):
+    def process(self, onion):
         """Process all applicable onions."""
-        for onion in onions:
-            self.handle_onion(onion[1])
+        self.handle_onion(onion[1])
         #with ThreadPoolExecutor(max_workers=1) as executor:
         #    collect_tasks = [executor.submit(self.collect, files_batch) for files_batch in self.iter_batches(onions, batch_size=10)]
         #    for tasks in collect_tasks:
