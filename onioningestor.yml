@@ -22,6 +22,14 @@ sources:
       module: simplefile
       filename: onion_master_list.txt
 
+    - name: hunchly
+      module: hunchly
+      domain: https://www.dropbox.com/sh/wdleu9o7jj1kk7v/AADq2sapbxm7rVtoLOnFJ7HHa/HiddenServices.xlsx
+
+    - name: pystemon
+      module: pystemon
+      dirname: pystemon/alerts/
+
     #  - name: source-gist
     #    module: gist
     #    url: https://gist.github.com/search?l=Text&q=.onion
