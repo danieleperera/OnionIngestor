@@ -38,7 +38,7 @@ class Plugin(Source):
                             type='domain',
                             status='offline',
                             monitor=False,
-                            denylist=False)
+                            denylist="")
                         )
                     )
 

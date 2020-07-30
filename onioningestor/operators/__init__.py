@@ -113,7 +113,7 @@ class Operator:
                     type='domain',
                     status='offline',
                     monitor=False,
-                    denylist=False)))
+                    denylist="")))
 
     def process(self, onion):
         """Process all applicable onions."""

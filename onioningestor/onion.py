@@ -1,3 +1,5 @@
+import re
+import operator
 from datetime import datetime as dt
 
 class Onion(object):
@@ -11,6 +13,16 @@ class Onion(object):
         self.denylist = denylist
         self.datetime = dt.now()
         self.operators = {}
+
+    url = property(operator.attrgetter('_url'))
+
+    @url.setter
+    def url(self, domain):
+        onion_pattern = re.compile(r'([a-z2-7]{16,56}\.onion)')
+        if onion_pattern.match(domain):
+            self._url = domain
+        else:
+            raise Exception("Onion domain pattern does not match")
 
     def set_operator(self, response):
         self.operators.update(response)
