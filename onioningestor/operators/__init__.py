@@ -100,11 +100,13 @@ class Operator:
 
     def findCrawls(self, content, hiddenService):
         crawl = set()
+        f1 = open("temp_crawl.txt", "a")
         for onion in re.findall(r'\s?(\w+.onion)', str(content)):
             if onion != hiddenService:
                 crawl.add(onion)
         for item in crawl:
             self.logger.debug(f'crawling queue added: {item}')
+            f1.write(item+'\n')
             self.queueCrawl.put((
                 3,
                 self.onion(

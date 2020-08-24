@@ -19,10 +19,10 @@ class Onion(object):
     @url.setter
     def url(self, domain):
         onion_pattern = re.compile(r'([a-z2-7]{16,56}\.onion)')
-        if onion_pattern.match(domain):
-            self._url = domain
+        if onion_pattern.match(domain.lower()):
+            self._url = domain.lower()
         else:
-            raise Exception("Onion domain pattern does not match")
+            raise Exception(f"'{domain.lower()}' domain pattern does not match onion pattern")
 
     def set_operator(self, response):
         self.operators.update(response)
