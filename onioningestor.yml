@@ -29,6 +29,10 @@ sources:
     - name: pystemon
       module: pystemon
       dirname: pystemon/alerts/
+    
+    - name: dark.fail
+      module: dark.fail
+      domain: https://dark.fail/
 
     #  - name: source-gist
     #    module: gist
