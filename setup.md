@@ -12,6 +12,11 @@ sudo docker run -it -p 8050:8050 --net="host" \
       -v2
 ```
 
+#### Fix for issue proxy not working
+https://github.com/scrapinghub/splash/issues/268
+>must add --net="host"
+In docker localhost doesn't refer to 127.0.0.1
+
 ### alpine-tor image Lots of IP addresses. One single endpoint for your client. Load-balancing by HAproxy.
 >sudo docker pull zeta0/alpine-tor:latest
 
@@ -19,12 +24,10 @@ sudo docker run -it -p 8050:8050 --net="host" \
 
 #### create file in /home/<USER>/splash/proxy-profiles/default.ini
 ```
->>>
 [proxy]
 host=localhost
 port=9050
 type=SOCKS5
-<<<
 ```
 
 #### Tests
@@ -34,13 +37,14 @@ type=SOCKS5
 
 >curl -x socks5h://localhost:5566 http://archivecaslytosk.onion/
 
-** Fix for issue proxy not working **
-https://github.com/scrapinghub/splash/issues/268
 
 ### Docker useful commands
 >docker ps -aq
+
 >docker stop $(docker ps -aq)
+
 >docker rm $(docker ps -aq)
+
 >docker rmi $(docker images -q)
 
 
