@@ -7,7 +7,7 @@ idna==2.10
 langdetect==1.0.8
 lxml==4.5.1
 PySocks==1.7.1
-PyYAML==5.3.1
+PyYAML==5.4
 requests==2.24.0
 schedule==0.6.0
 selenium==3.141.0
