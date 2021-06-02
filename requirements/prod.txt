@@ -14,5 +14,5 @@ selenium==3.141.0
 six==1.15.0
 soupsieve==2.0.1
 stem==1.8.0
-urllib3==1.25.9
+urllib3==1.26.5
 xlrd==1.2.0
