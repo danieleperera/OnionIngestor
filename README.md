@@ -26,7 +26,7 @@
 
 OnionIngestor is based on ThreatIngestor tool structure to enable modular and extendable access for Cyber Threat Intelligence teams so that they can monitor and collect information on hidden sites over tor network.
 
-The project is at it's early stages of development.
+The project is in its early stages of development.
 
 ## To-do-list
 
