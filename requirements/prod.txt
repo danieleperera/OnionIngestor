@@ -5,7 +5,7 @@ click==7.1.2
 elasticsearch==7.8.0
 idna==2.10
 langdetect==1.0.8
-lxml==4.5.1
+lxml==4.9.1
 PySocks==1.7.1
 PyYAML==5.3.1
 requests==2.24.0
